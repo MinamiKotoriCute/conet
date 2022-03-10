@@ -15,16 +15,19 @@ public:
     TcpClient(boost::asio::any_io_executor executor);
     TcpClient(boost::asio::ip::tcp::socket socket);
 
+    TcpClient(const TcpClient&) = delete;
+    TcpClient(TcpClient &&) = default;
+    TcpClient& operator=(const TcpClient &) = delete;
+    TcpClient& operator=(TcpClient &&) = default;
+
     boost::asio::awaitable<result<void>> connect(const std::string &url);
-    void disconnect();
+    result<void> disconnect();
     boost::asio::awaitable<result<void>> read(std::vector<char> &read_buffer);
     boost::asio::awaitable<result<void>> write(std::vector<char> &&data);
     boost::asio::any_io_executor get_executor();
 
 private:
 	boost::asio::ip::tcp::socket socket_;
-	std::vector<char> read_buffer_;
-	std::vector<char> write_buffer_;
 };
 
 } // namespace conet

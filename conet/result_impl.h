@@ -86,8 +86,8 @@ struct ResultFailureType
 {
 };
 
-template<typename T = void>
-class Result;
+template<typename T>
+class Result {};
 
 template<>
 class Result<void>
@@ -111,7 +111,7 @@ public:
 
     Result(boost::system::error_code &&error_code) :
         unique_error_id_(result_get_unique_error_id()),
-        error_code_(std::forward<boost::system::error_code>(error_code))
+        error_code_(std::move(error_code))
     {
     }
 
@@ -124,8 +124,8 @@ public:
 
     template<typename U>
     Result(Result<U> &&other) :
-        unique_error_id_(std::forward<U>(other).unique_error_id_),
-        error_code_(std::forward<U>(other).error_code_)
+        unique_error_id_(std::move(other).unique_error_id_),
+        error_code_(std::move(other).error_code_)
     {
     }
 
@@ -169,7 +169,8 @@ protected:
 };
 
 template<typename ValueType>
-class Result : public Result<void>
+    requires (std::default_initializable<ValueType> && !std::same_as<ValueType, void>)
+class Result<ValueType> : public Result<void>
 {
     using this_type = Result;
     using base_type = Result<void>;
@@ -189,7 +190,7 @@ public:
     }
 
     Result(boost::system::error_code &&error_code) :
-        base_type(std::forward<boost::system::error_code>(error_code))
+        base_type(std::move(error_code))
     {
     }
 
@@ -201,7 +202,7 @@ public:
 
     Result(ValueType &&x) :
         base_type(),
-        value_(std::forward<ValueType>(x))
+        value_(std::move(x))
     {
     }
 
@@ -212,8 +213,8 @@ public:
     }
 
     Result(Result &&other) :
-        base_type(std::forward<Result>(other)),
-        value_(std::forward<Result>(other).value_)
+        base_type(std::move(other)),
+        value_(std::move(other).value_)
     {
     }
     
@@ -225,7 +226,7 @@ public:
 
     template<typename U>
     Result(Result<U> &&other) :
-        base_type(std::forward<U>(other))
+        base_type(std::move(other))
     {
     }
 
@@ -251,6 +252,93 @@ public:
 
 protected:
     ValueType value_;
+};
+
+
+template<typename ValueType>
+    requires (!std::default_initializable<ValueType> && !std::same_as<ValueType, void>)
+class Result<ValueType> : public Result<void>
+{
+    using this_type = Result;
+    using base_type = Result<void>;
+
+    template<typename T>
+    friend class Result;
+
+public:
+    Result() :
+        base_type()
+    {
+    }
+
+    Result(const boost::system::error_code &error_code) :
+        base_type(error_code)
+    {
+    }
+
+    Result(boost::system::error_code &&error_code) :
+        base_type(std::move(error_code))
+    {
+    }
+
+    Result(const ValueType &x) :
+        base_type(),
+        value_(std::make_unique<ValueType>(x))
+    {
+    }
+
+    Result(ValueType &&x) :
+        base_type(),
+        value_(std::make_unique<ValueType>(std::move(x)))
+    {
+    }
+
+    Result(const Result &other) :
+        base_type(other),
+        value_(std::make_unique<ValueType>(*other.value_))
+    {
+    }
+
+    Result(Result &&other) :
+        base_type(std::move(other)),
+        value_(std::make_unique<ValueType>(std::move(*other.value_)))
+    {
+    }
+
+    template<typename U>
+    Result(const Result<U> &other) :
+        base_type(other)
+    {
+    }
+
+    template<typename U>
+    Result(Result<U> &&other) :
+        base_type(std::move(other))
+    {
+    }
+
+    ValueType& value() &
+    {
+        return *value_;
+    }
+
+    ValueType&& value() &&
+    {
+        return std::move(*value_);
+    }
+
+    const ValueType& value() const &
+    {
+        return *value_;
+    }
+
+    const ValueType& value() const &&
+    {
+        return *value_;
+    }
+
+protected:
+    std::unique_ptr<ValueType> value_;
 };
 
 } // namespace impl

@@ -55,22 +55,30 @@ boost::asio::awaitable<result<void>> TcpClient::connect(const std::string &url)
     co_return RESULT_SUCCESS;
 }
 
-void TcpClient::disconnect()
+result<void> TcpClient::disconnect()
 {
     if (socket_.is_open()) {
         boost::system::error_code ec;
         socket_.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
         if (ec)
         {
-			LOG(WARNING) << ec.message();
+            boost::system::error_code error_code;
+            static constexpr boost::source_location loc = BOOST_CURRENT_LOCATION;
+            error_code.assign(ec.value(), ec.category(), &loc);
+            return error_code;
 		}
 
         socket_.close(ec);
         if (ec)
         {
-			LOG(WARNING) << ec.message();
+            boost::system::error_code error_code;
+            static constexpr boost::source_location loc = BOOST_CURRENT_LOCATION;
+            error_code.assign(ec.value(), ec.category(), &loc);
+            return error_code;
 		}
     }
+
+    return {};
 }
 
 boost::asio::awaitable<result<void>> TcpClient::write(std::vector<char> &&data)
@@ -92,7 +100,7 @@ boost::asio::awaitable<result<void>> TcpClient::write(std::vector<char> &&data)
 
         boost::system::error_code error_code;
         static constexpr boost::source_location loc = BOOST_CURRENT_LOCATION;
-        error_code.assign(ec.value(), ec.category(), &loc);
+        error_code.assign(error::third_party_error, error::conet_category(), &loc);
         co_return error_code;
     }
 

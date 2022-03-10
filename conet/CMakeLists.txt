@@ -16,6 +16,8 @@ set(conet_src
     result.h
     tcp_client.cpp
     tcp_client.h
+    tcp_server.cpp
+    tcp_server.h
     url_parser.cpp
     url_parser.h
 )
