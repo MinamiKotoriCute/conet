@@ -11,8 +11,8 @@ TcpServer::TcpServer(boost::asio::io_context& io_context) :
 
 }
 
-TcpServer::TcpServer(boost::asio::strand<boost::asio::io_context::executor_type>& strand) :
-    acceptor_(strand)
+TcpServer::TcpServer(boost::asio::any_io_executor executor) :
+    acceptor_(executor)
 {
 
 }

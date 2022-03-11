@@ -15,7 +15,12 @@ public:
     using AcceptResultType = result<TcpClient>;
 
     TcpServer(boost::asio::io_context& io_context);
-    TcpServer(boost::asio::strand<boost::asio::io_context::executor_type>& strand);
+    TcpServer(boost::asio::any_io_executor executor);
+
+    TcpServer(const TcpServer&) = delete;
+    TcpServer(TcpServer &&) = default;
+    TcpServer& operator=(const TcpServer &) = delete;
+    TcpServer& operator=(TcpServer &&) = default;
 
     result<void> listen(const std::string &ip, short port);
     result<void> close();
