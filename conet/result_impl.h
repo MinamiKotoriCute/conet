@@ -5,7 +5,8 @@
 #include <memory>
 
 #include <glog/logging.h>
-#include <boost/system.hpp>
+
+#include "error_info.h"
 
 #define RESULT_ERROR(...) conet::impl::Result<void>(ResultFailureType{}, ##__VA_ARGS__)
 #define RESULT_SUCCESS conet::impl::Result<void>()
@@ -71,14 +72,6 @@ v = std::forward<decltype(RESULT_VARIABLE_TMP)>(RESULT_VARIABLE_TMP).value();
 namespace conet {
 namespace impl {
 
-template<typename T>
-T&& result_log(T &&result)
-{
-    LOG(WARNING) << result;
-    return std::forward<T>(result);
-}
-
-int64_t result_get_unique_error_id();
 std::string string_format(const std::string format, ...);
 std::string string_format();
 
@@ -98,37 +91,43 @@ class Result<void>
     friend class Result;
 
 public:
-    Result() :
-        unique_error_id_(0)
+    Result() = default;
+    Result(const Result &) = default;
+    Result(Result &&) = default;
+
+    Result(const ErrorInfo &error_info) :
+        error_info_(error_info)
+    {
+    }
+
+    Result(ErrorInfo &&error_info) :
+        error_info_(std::move(error_info))
     {
     }
 
     Result(const boost::system::error_code &error_code) :
-        unique_error_id_(result_get_unique_error_id()),
-        error_code_(error_code)
+        error_info_(error_code)
     {
     }
 
     Result(boost::system::error_code &&error_code) :
-        unique_error_id_(result_get_unique_error_id()),
-        error_code_(std::move(error_code))
+        error_info_(std::move(error_code))
     {
     }
 
     template<typename U>
     Result(const Result<U> &other) :
-        unique_error_id_(other.unique_error_id_),
-        error_code_(other.error_code_)
+        error_info_(other.error_info_)
     {
     }
 
     template<typename U>
     Result(Result<U> &&other) :
-        unique_error_id_(std::move(other).unique_error_id_),
-        error_code_(std::move(other).error_code_)
+        error_info_(std::move(other).error_info_)
     {
     }
 
+    // is_success
     operator bool() const
     {
         return !has_error();
@@ -136,36 +135,21 @@ public:
 
     bool has_error() const
     {
-        return unique_error_id_ != 0;
+        return error_info_.has_error();
     }
 
-    std::string error_message() const
+    const ErrorInfo& error_info() const
     {
-        return error_message_;
+        return error_info_;
     }
 
-    uint64_t unique_error_id() const
+    ErrorInfo& error_info()
     {
-        return unique_error_id_;
-    }
-
-    const boost::system::error_code& error_code() const
-    {
-        return error_code_;
-    }
-
-    friend std::ostream& operator<<(std::ostream &os, const this_type &other)
-    {
-        os << "unique_error_id:" << other.unique_error_id_
-            << " error_message:" << other.error_message_
-            << " what:" << other.error_code_.what();
-        return os;
+        return error_info_;
     }
 
 protected:
-    uint64_t unique_error_id_;
-    std::string error_message_;
-    boost::system::error_code error_code_;
+    ErrorInfo error_info_;
 };
 
 template<typename ValueType>
@@ -179,8 +163,17 @@ class Result<ValueType> : public Result<void>
     friend class Result;
 
 public:
-    Result() :
-        base_type()
+    Result() = default;
+    Result(const Result &) = default;
+    Result(Result &&) = default;
+
+    Result(const ErrorInfo &error_info) :
+        base_type(error_info)
+    {
+    }
+
+    Result(ErrorInfo &&error_info) :
+        base_type(std::move(error_info))
     {
     }
 
@@ -206,18 +199,6 @@ public:
     {
     }
 
-    Result(const Result &other) :
-        base_type(other),
-        value_(other.value_)
-    {
-    }
-
-    Result(Result &&other) :
-        base_type(std::move(other)),
-        value_(std::move(other).value_)
-    {
-    }
-    
     template<typename U>
     Result(const Result<U> &other) :
         base_type(other)
@@ -266,8 +247,17 @@ class Result<ValueType> : public Result<void>
     friend class Result;
 
 public:
-    Result() :
-        base_type()
+    Result() = default;
+    Result(const Result &) = default;
+    Result(Result &&) = default;
+
+    Result(const ErrorInfo &error_info) :
+        base_type(error_info)
+    {
+    }
+
+    Result(ErrorInfo &&error_info) :
+        base_type(std::move(error_info))
     {
     }
 
@@ -290,18 +280,6 @@ public:
     Result(ValueType &&x) :
         base_type(),
         value_(std::make_unique<ValueType>(std::move(x)))
-    {
-    }
-
-    Result(const Result &other) :
-        base_type(other),
-        value_(std::make_unique<ValueType>(*other.value_))
-    {
-    }
-
-    Result(Result &&other) :
-        base_type(std::move(other)),
-        value_(std::make_unique<ValueType>(std::move(*other.value_)))
     {
     }
 

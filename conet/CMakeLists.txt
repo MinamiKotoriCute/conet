@@ -9,8 +9,20 @@ set(CMAKE_CXX_STANDARD 20)
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fcoroutines")
 
 set(conet_src
+    defer.h
+    error_info.cpp
+    error_info.h
     error.cpp
     error.h
+    pack_coder.cpp
+    pack_coder.h
+    pack_maker.cpp
+    pack_maker.h
+    pack_parser.cpp
+    pack_parser.h
+    pack_tcp_reader.cpp
+    pack_tcp_reader.h
+    protobuf_tcp_client.h
     result_impl.cpp
     result_impl.h
     result.h

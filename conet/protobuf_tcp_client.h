@@ -2,6 +2,7 @@
 
 #include <map>
 #include <google/protobuf/message.h>
+#include <glog/logging.h>
 
 #include "defer.h"
 #include "tcp_client.h"
@@ -23,6 +24,20 @@ concept IsPackTcpReader = requires (T t)
     { t.read() } -> std::same_as<boost::asio::awaitable<result<std::vector<char>>>>;
 };
 
+template<typename T>
+struct is_awaitable : public std::false_type
+{
+};
+
+template<typename T>
+struct is_awaitable<boost::asio::awaitable<T>> : public std::true_type
+{
+};
+
+template<typename T>
+inline constexpr bool is_awaitable_v = is_awaitable<T>::value;
+
+
 template<IsPackCoder PackCoder, IsPackTcpReader PackTcpReader>
 class basic_ProtobufTcpClient
 {
@@ -30,7 +45,7 @@ public:
     using WaitCallbackType = std::function<void(boost::system::error_code, std::shared_ptr<google::protobuf::Message>)>;
     using MessageResultType = const google::protobuf::Message&;
     using MessageCallbackType = std::function<void(MessageResultType)>;
-    using MessageCoroutineCallbackType = std::function<awaitable<result<void>>(MessageResultType)>;
+    using MessageCoroutineCallbackType = std::function<boost::asio::awaitable<result<void>>(MessageResultType)>;
 
     basic_ProtobufTcpClient(boost::asio::io_context& io_context) :
         tcp_client_(io_context),
@@ -70,7 +85,26 @@ public:
         return tcp_client_.connect(url);
     }
 
-    boost::asio::awaitable<result<void>> start_receive()
+    void start_coroutine(std::function<boost::asio::awaitable<result<void>>()> f)
+    {
+        boost::asio::co_spawn(tcp_client_.get_executor(),
+            f(),
+            [](std::exception_ptr e, result<void> result)
+            {
+                if (e)
+                {
+                    LOG(WARNING) << "exception.";
+                }
+
+                if (result.has_error())
+                {
+                    LOG(WARNING) << "result.error_info:" << result.error_info();
+                }
+            });
+    }
+
+    // start receive tcp
+    boost::asio::awaitable<result<void>> run()
     {
         is_receiving_ = true;
         DEFER(is_receiving_ = false);
@@ -84,7 +118,7 @@ public:
             auto&& r = pack_coder_.decode(std::move(buffer));
             if (!r)
             {
-                LOG(INFO) << r.error_message();
+                LOG(INFO) << r;
                 continue;
             }
             auto &&message = std::move(r).value();
@@ -122,7 +156,7 @@ public:
                 {
                     auto callback = it->second;
                     boost::asio::co_spawn(tcp_client_.get_executor(),
-                    [callback, message]() -> awaitable<result<void>>
+                    [callback, message]() -> boost::asio::awaitable<result<void>>
                     {
                         return callback(*message.get());
                     },
@@ -130,7 +164,7 @@ public:
                     {
                         if (result.has_error())
                         {
-                            LOG(INFO) << "unique_error_id:" << result.unique_error_id() << " error_message:" << result.error_message() << "\n";
+                            LOG(INFO) << "result.error_info:" << result.error_info();
                         }
                     });
                     continue;
@@ -143,34 +177,35 @@ public:
         co_return RESULT_SUCCESS;
     }
 
-    void close()
+    result<void> close()
     {
-        tcp_client_.disconnect();
+        return tcp_client_.disconnect();
     }
 
-    awaitable<result<void>> send(const google::protobuf::Message &message)
+    boost::asio::awaitable<result<void>> send(const google::protobuf::Message &message)
     {
         PackCoder pack;
         auto write_buffer = pack.encode(message);
         if (write_buffer.empty())
         {
-            auto error_result = RESULT_ERROR("pack encode fail.");
-            LOG(WARNING) << error_result;
-            co_return error_result;
+            boost::system::error_code error_code;
+            static constexpr boost::source_location loc = BOOST_CURRENT_LOCATION;
+            error_code.assign(error::third_party_error, error::conet_category(), &loc);
+            co_return error_code;
         }
 
         co_return co_await tcp_client_.write(std::move(write_buffer));
     }
 
     template<typename T>
-    awaitable<result<std::shared_ptr<T>>> send(const google::protobuf::Message &message)
+    boost::asio::awaitable<result<std::shared_ptr<T>>> send(const google::protobuf::Message &message)
     {
         RESULT_CO_CHECK(co_await send(message));
         co_return co_await wait<T>();
     }
 
     template<typename T>
-    awaitable<result<std::shared_ptr<T>>> wait()
+    boost::asio::awaitable<result<std::shared_ptr<T>>> wait()
     {
         // TODO: fix two way wait same protobuf.
 
@@ -228,7 +263,7 @@ public:
 
         if constexpr (is_awaitable_v<typename Helper::ret>)
         {
-            add_co_message_callback(T::descriptor()->full_name(), [callback = std::forward<Callback>(callback)] (MessageResultType r) -> awaitable<result<void>>
+            add_co_message_callback(T::descriptor()->full_name(), [callback = std::forward<Callback>(callback)] (MessageResultType r) -> boost::asio::awaitable<result<void>>
             {
                 co_return co_await callback(dynamic_cast<const T&>(r));
             });
@@ -277,6 +312,7 @@ private:
     std::map<std::string, MessageCallbackType> message_callback_group_;
     std::map<std::string, MessageCoroutineCallbackType> message_coroutine_callback_group_;
     bool is_receiving_;
+
 };
 
 } // namespace conet

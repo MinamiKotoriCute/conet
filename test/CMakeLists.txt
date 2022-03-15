@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.14)
 
 # conet requires at least c++20
 set(CMAKE_CXX_STANDARD 20)
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fcoroutines")
 
 include(FetchContent)
 FetchContent_Declare(
@@ -11,6 +12,8 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(googletest)
 
 add_executable(conet_test
+    test_awaitable.cpp
+    test_io_context.cpp
     test_result.cpp
     test_url_parser.cpp
 )

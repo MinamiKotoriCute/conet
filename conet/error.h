@@ -9,6 +9,7 @@ enum basic_errors
 {
     parameter_error = -1,
     third_party_error = -2,
+    internal_error = -3,
 };
 
 class conet_category_impl : public boost::system::error_category

@@ -1,0 +1,12 @@
+syntax = "proto3";
+package proto;
+
+message HelloREQ
+{
+    string value = 1;
+}
+
+message HelloRSP
+{
+    string value = 1;
+}

@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
         {
             if (result.has_error())
             {
-                LOG(INFO) << "unique_error_id:" << result.unique_error_id() << " error_message:" << result.error_message() << "\n";
+                LOG(INFO) << "unique_error_id:" << result;
             }
         });
 

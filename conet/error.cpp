@@ -16,6 +16,8 @@ std::string conet_category_impl::message(int ev) const
         return "parameter_error";
     case third_party_error:
         return "third_party_error";
+    case internal_error:
+        return "internal_error";
     }
 
     return "conet error";

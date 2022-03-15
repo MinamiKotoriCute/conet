@@ -6,12 +6,6 @@
 namespace conet {
 namespace impl {
 
-int64_t result_get_unique_error_id()
-{
-    static std::atomic_uint64_t id;
-    return ++id;
-}
-
 std::string string_format(const std::string fmt, ...)
 {
     int size = ((int)fmt.size()) * 2 + 50;   // Use a rubric appropriate for your code
