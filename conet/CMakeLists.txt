@@ -14,6 +14,8 @@ set(conet_src
     error_info.h
     error.cpp
     error.h
+    mysql_client.cpp
+    mysql_client.h
     pack_coder.cpp
     pack_coder.h
     pack_maker.cpp
@@ -22,6 +24,8 @@ set(conet_src
     pack_parser.h
     pack_tcp_reader.cpp
     pack_tcp_reader.h
+    polling.cpp
+    polling.h
     protobuf_tcp_client.h
     result_impl.cpp
     result_impl.h
@@ -43,6 +47,7 @@ PUBLIC
     -pthread
     glog
     protobuf
+    -lmysqlclient
 )
 
 target_include_directories(conet

@@ -51,5 +51,22 @@ const boost::system::error_category& network_category()
     return instance;
 }
 
+
+const char* mysql_category_impl::name() const noexcept
+{
+    return "conet.mysql";
+}
+
+std::string mysql_category_impl::message(int ev) const
+{
+    return "conet.mysql error";
+}
+
+const boost::system::error_category& mysql_category()
+{
+    static const mysql_category_impl instance;
+    return instance;
+}
+
 } // namespace error
 } // namespace conet

@@ -35,5 +35,20 @@ public:
 
 const boost::system::error_category& network_category();
 
+
+enum mysql_errors
+{
+
+};
+
+class mysql_category_impl : public boost::system::error_category
+{
+public:
+    const char* name() const noexcept override;
+    std::string message(int ev) const override;
+};
+
+const boost::system::error_category& mysql_category();
+
 } // namespace error
 } // namespace conet
