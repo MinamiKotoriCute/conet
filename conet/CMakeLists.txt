@@ -14,6 +14,7 @@ set(conet_src
     error_info.h
     error.cpp
     error.h
+    http_client.h
     mysql_client.cpp
     mysql_client.h
     pack_coder.cpp
