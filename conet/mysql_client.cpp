@@ -268,6 +268,27 @@ void MysqlQueryResultImpl::add_result(const std::string &key, const std::string 
     datas_[key] = value;
 }
 
+MysqlClient::~MysqlClient()
+{
+    close();
+}
+
+MysqlClient::MysqlClient(MysqlClient &&other)
+{
+    *this = std::move(other);
+}
+
+MysqlClient& MysqlClient::operator=(MysqlClient &&other)
+{
+    std::swap(mysql_, other.mysql_);
+    std::swap(host_, other.host_);
+    std::swap(port_, other.port_);
+    std::swap(user_, other.user_);
+    std::swap(password_, other.password_);
+    std::swap(database_, other.database_);
+    return *this;
+}
+
 boost::asio::awaitable<result<void>> MysqlClient::connect(const std::string& host, unsigned int port, const std::string& user, const std::string& password, const std::string& database)
 {
     if (mysql_ == nullptr)
@@ -284,6 +305,15 @@ boost::asio::awaitable<result<void>> MysqlClient::connect(const std::string& hos
     return boost::asio::async_initiate<const boost::asio::use_awaitable_t<>, void(result<void>)>(
         initiate_mysql_connect(*this),
         boost::asio::use_awaitable);
+}
+
+void MysqlClient::close()
+{
+    if (mysql_)
+    {
+        mysql_close(mysql_);
+        mysql_ = nullptr;
+    }
 }
 
 boost::asio::awaitable<result<void>> MysqlClient::mysql_query(const std::string& sql)

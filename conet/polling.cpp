@@ -33,9 +33,7 @@ void Polling::add(void *c, std::function<bool()> &&f)
 
     {
         std::lock_guard<std::mutex> lock(thread_mutex_);
-        if (thread_.joinable())
-            return;
-        else
+        if (!thread_.joinable())
             thread_ = std::thread(std::bind(&Polling::run, this));
     }
 }
@@ -61,7 +59,7 @@ void Polling::run()
 
                 return p.second.empty();
             });
-            
+
             if (functions_.empty())
                 break;
         }

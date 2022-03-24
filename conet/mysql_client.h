@@ -61,8 +61,17 @@ class MysqlClient
     friend initiate_mysql_fetch_row;
 
 public:
+    MysqlClient() = default;
+    ~MysqlClient();
+
+    MysqlClient(const MysqlClient &) = delete;
+    MysqlClient(MysqlClient &&other);
+    MysqlClient& operator=(const MysqlClient &) = delete;
+    MysqlClient& operator=(MysqlClient &&other);
+
     boost::asio::awaitable<result<void>> connect(const std::string& host, unsigned int port, const std::string& user, const std::string& password, const std::string& database);
-    // boost::asio::awaitable<result<void>> query(const std::string& sql);
+
+    void close();
 
     template<typename T = MysqlQueryResultImpl>
     boost::asio::awaitable<result<std::vector<T>>> query(const std::string& sql)
@@ -139,9 +148,9 @@ private:
     boost::asio::awaitable<result<MYSQL_RES *>> mysql_store_result();
     boost::asio::awaitable<result<char **>> mysql_fetch_row(MYSQL_RES *r);
 
-    MYSQL *mysql_;
+    MYSQL *mysql_ = nullptr;
     std::string host_;
-    unsigned int port_;
+    unsigned int port_ = 0;
     std::string user_;
     std::string password_;
     std::string database_;
