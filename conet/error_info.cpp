@@ -55,28 +55,28 @@ std::string ErrorInfo::beautiful_output() const
     std::stringstream ss;
 
     // error_id
-    ss << "error_id:" << error_id_;
+    ss << "error_id: " << error_id_;
 
     // error_code
-    ss << "\nerror_num:" << error_code_.value()
-        << "\nerror_name:" << error_code_.message()
-        << "\nerror_category:" << error_code_.category().name();
+    ss << "\nerror_num: " << error_code_.value()
+        << "\nerror_name: " << error_code_.message()
+        << "\nerror_category: " << error_code_.category().name();
     if (error_code_.has_location())
     {
-        ss << "\nlocation:" << error_code_.location().file_name() << ":" << error_code_.location().line()
-            << "\nfunction:" << error_code_.location().function_name();
+        ss << "\nlocation: " << error_code_.location().file_name() << ":" << error_code_.location().line()
+            << "\nfunction: " << error_code_.location().function_name();
     }
     
     // error_message
     if (!error_message_.empty())
     {
-        ss << "\nerror_message:" << error_message_ << "\n";
+        ss << "\nerror_message: " << error_message_ << "\n";
     }
 
     // pairs
     for (const auto &p : pairs_)
     {
-        ss << "\n" << p.first << ":" << p.second;
+        ss << "\n" << p.first << ": " << p.second;
     }
 
     return ss.str();
