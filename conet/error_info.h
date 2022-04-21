@@ -26,6 +26,7 @@ public:
 
     ErrorInfo& add_pair(const std::string &key, const std::string &value);
     friend std::ostream& operator<<(std::ostream &os, const ErrorInfo &other);
+    std::string beautiful_output() const;
 
 private:
     std::uint64_t error_id_;

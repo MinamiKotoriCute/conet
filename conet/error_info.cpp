@@ -1,5 +1,7 @@
 #include "error_info.h"
 
+#include <sstream>
+
 namespace conet {
 
 static int64_t result_get_unique_error_id()
@@ -46,6 +48,39 @@ ErrorInfo& ErrorInfo::add_pair(const std::string &key, const std::string &value)
 {
     pairs_[key] = value;
     return *this;
+}
+
+std::string ErrorInfo::beautiful_output() const
+{
+    std::stringstream ss;
+
+    // error_id
+    ss << "error_id:" << error_id_;
+
+    // error_code
+    ss << "\nerror_num:" << error_code_.value()
+        << "\nerror_name:" << error_code_.message()
+        << "\nerror_category:" << error_code_.category().name();
+    if (error_code_.has_location())
+    {
+        ss << "\nline:" << error_code_.location().line()
+            << "\nfile:" << error_code_.location().file_name()
+            << "\nfunction:" << error_code_.location().function_name();
+    }
+    
+    // error_message
+    if (!error_message_.empty())
+    {
+        ss << "\nerror_message:" << error_message_ << "\n";
+    }
+
+    // pairs
+    for (const auto &p : pairs_)
+    {
+        ss << "\n" << p.first << ":" << p.second;
+    }
+
+    return ss.str();
 }
 
 std::ostream& operator<<(std::ostream &os, const ErrorInfo &other)
