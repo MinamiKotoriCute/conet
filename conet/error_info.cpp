@@ -63,8 +63,7 @@ std::string ErrorInfo::beautiful_output() const
         << "\nerror_category:" << error_code_.category().name();
     if (error_code_.has_location())
     {
-        ss << "\nline:" << error_code_.location().line()
-            << "\nfile:" << error_code_.location().file_name()
+        ss << "\nlocation:" << error_code_.location().file_name() << ":" << error_code_.location().line()
             << "\nfunction:" << error_code_.location().function_name();
     }
     
