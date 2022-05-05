@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <map>
 #include <string>
+#include <sstream>
 
 #include <boost/system.hpp>
 
@@ -24,7 +25,23 @@ public:
     ErrorInfo& set_error_message(const std::string &error_message);
     ErrorInfo& set_error_message(std::string &&error_message);
 
-    ErrorInfo& add_pair(const std::string &key, const std::string &value);
+    template<typename T>
+    ErrorInfo& add_pair(const std::string &key, const T &value)
+    {
+        if constexpr (std::is_same_v<T, std::string>)
+        {
+            pairs_[key] = value;
+        }
+        else
+        {
+            std::stringstream ss;
+            ss << value;
+            pairs_[key] = ss.str();
+        }
+
+        return *this;
+    }
+
     friend std::ostream& operator<<(std::ostream &os, const ErrorInfo &other);
     std::string beautiful_output() const;
 

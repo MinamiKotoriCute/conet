@@ -44,12 +44,6 @@ ErrorInfo& ErrorInfo::set_error_message(std::string &&error_message)
     return *this;
 }
 
-ErrorInfo& ErrorInfo::add_pair(const std::string &key, const std::string &value)
-{
-    pairs_[key] = value;
-    return *this;
-}
-
 std::string ErrorInfo::beautiful_output() const
 {
     std::stringstream ss;

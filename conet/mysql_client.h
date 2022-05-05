@@ -143,6 +143,15 @@ public:
         co_return query_result_group;
     }
 
+    std::string encode_string(const std::string &raw)
+    {
+        std::string ret;
+        ret.resize(raw.size()*2+1);
+        auto size = mysql_real_escape_string(mysql_, &ret[0], &raw[0], raw.size());
+        ret.resize(size);
+        return ret;
+    }
+
 private:
     boost::asio::awaitable<result<void>> mysql_query(const std::string& sql);
     boost::asio::awaitable<result<MYSQL_RES *>> mysql_store_result();
