@@ -3,14 +3,17 @@
 #include <functional>
 #include <optional>
 #include <memory>
+#include <chrono>
 
 #include <boost/asio.hpp>
 #include <boost/beast/core.hpp>
 #include <boost/beast/http.hpp>
 #include <boost/beast/version.hpp>
 #include <boost/leaf.hpp>
+#include <boost/asio/experimental/awaitable_operators.hpp>
 
 #include "url_parser.h"
+#include "error.h"
 
 namespace conet {
 
@@ -55,6 +58,34 @@ public:
         }
 
         co_return rsp.body();
+    }
+
+    boost::asio::awaitable<result<std::string>> co_get(const std::string &url, std::chrono::nanoseconds timeout)
+    {
+        using namespace boost::asio::experimental::awaitable_operators;
+
+        boost::asio::steady_timer timer(stream_.get_executor());
+        timer.expires_after(timeout);
+        boost::system::error_code ec;
+        std::variant<std::monostate, result<std::string>> result = co_await (timer.async_wait(boost::asio::redirect_error(boost::asio::use_awaitable, ec)) || co_get(url));
+
+        if (result.index() == 0)
+        {
+            if (ec)
+            {
+                boost::system::error_code error_code;
+                static constexpr boost::source_location loc = BOOST_CURRENT_LOCATION;
+                error_code.assign(ec.value(), ec.category(), &loc);
+                co_return error_code;
+            }
+            
+            boost::system::error_code error_code;
+            static constexpr boost::source_location loc = BOOST_CURRENT_LOCATION;
+            error_code.assign(error::timeout, error::network_category(), &loc);
+            co_return error_code;
+        }
+
+        co_return std::get<1>(std::move(result));
     }
 
 private:

@@ -40,6 +40,8 @@ std::string network_category_impl::message(int ev) const
     {
     case connection_closed:
         return "connection_closed";
+    case timeout:
+        return "timeout";
     }
 
     return "conet.network error";

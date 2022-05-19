@@ -24,6 +24,7 @@ const boost::system::error_category& conet_category();
 enum network_errors
 {
     connection_closed = 1,
+    timeout = 2,
 };
 
 class network_category_impl : public boost::system::error_category
