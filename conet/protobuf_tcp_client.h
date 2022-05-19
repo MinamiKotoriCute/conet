@@ -265,14 +265,14 @@ public:
         {
             add_co_message_callback(T::descriptor()->full_name(), [callback = std::forward<Callback>(callback)] (MessageResultType r) -> boost::asio::awaitable<result<void>>
             {
-                co_return co_await callback(dynamic_cast<const T&>(r));
+                co_await callback(dynamic_cast<const T&>(r));
             });
         }
         else
         {
             add_message_callback(T::descriptor()->full_name(), [callback = std::forward<Callback>(callback)] (MessageResultType result)
             {
-                return callback(dynamic_cast<const T&>(result));
+                callback(dynamic_cast<const T&>(result));
             });
         }
     }
