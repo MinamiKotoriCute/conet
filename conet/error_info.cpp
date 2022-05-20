@@ -70,7 +70,17 @@ std::string ErrorInfo::beautiful_output() const
     // pairs
     for (const auto &p : pairs_)
     {
-        ss << "\n" << p.first << ": " << p.second;
+        if (p.second.size() == 1)
+            ss << "\n" << p.first << ": " << p.second[0];
+        else
+        {
+            int index = 0;
+            for (const auto &v : p.second)
+            {
+                ss << "\n" << p.first << "[" << index << "]: " << v;
+                ++index;
+            }
+        }
     }
 
     return ss.str();
@@ -101,7 +111,17 @@ std::ostream& operator<<(std::ostream &os, const ErrorInfo &other)
     // pairs
     for (const auto &p : other.pairs_)
     {
-        os << "," << p.first << "=" << p.second;
+        if (p.second.size() == 1)
+            os << "," << p.first << ": " << p.second[0];
+        else
+        {
+            int index = 0;
+            for (const auto &v : p.second)
+            {
+                os << "," << p.first << "[" << index << "]: " << v;
+                ++index;
+            }
+        }
     }
     os << "]";
 

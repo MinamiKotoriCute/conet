@@ -22,7 +22,8 @@
     return std::forward<RESULT_LOG_T>(result); \
 }(std::move(e));
 
-#define RESULT_LOG_WITH_ERROR(level, result)
+#define RESULT_LOG_WITH_ERROR(level, result) \
+    result.error_info().add_pair("callstack", __FILE__ + std::string(":") + std::to_string(__LINE__));
 
 
 #define RESULT_CHECK(e) \
