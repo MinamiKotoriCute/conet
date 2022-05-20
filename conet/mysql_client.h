@@ -88,6 +88,21 @@ public:
     template<typename T = MysqlQueryResultImpl>
     boost::asio::awaitable<result<std::vector<T>>> query(const std::string& sql)
     {
+        auto&& r = co_await query_real(sql);
+        if (!r)
+        {
+            r.error_info().add_pair("sql", sql);
+        }
+
+        co_return r;
+    }
+
+    std::string encode_string(const std::string &raw);
+
+private:
+    template<typename T = MysqlQueryResultImpl>
+    boost::asio::awaitable<result<std::vector<T>>> query_real(const std::string& sql)
+    {
         RESULT_CO_CHECK(co_await mysql_query(sql));
         RESULT_CO_AUTO(res, co_await mysql_store_result());
         if (res == nullptr)
@@ -125,9 +140,6 @@ public:
         co_return query_result_group;
     }
 
-    std::string encode_string(const std::string &raw);
-
-private:
     boost::asio::awaitable<result<void>> mysql_query(const std::string& sql);
     boost::asio::awaitable<result<std::shared_ptr<MYSQL_RES>>> mysql_store_result();
     boost::asio::awaitable<result<char **>> mysql_fetch_row(MYSQL_RES *r);

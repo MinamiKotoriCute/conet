@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.5)
 
 
-FIND_PACKAGE( Boost 1.78 )
+FIND_PACKAGE( Boost 1.78 COMPONENTS json)
 
 project(conet LANGUAGES CXX)
 
@@ -51,6 +51,7 @@ PUBLIC
     glog
     protobuf
     -lmysqlclient
+    Boost::json
 )
 
 target_include_directories(conet
