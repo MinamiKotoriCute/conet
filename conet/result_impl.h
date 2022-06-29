@@ -8,6 +8,8 @@
 
 #include "error_info.h"
 
+#define SINGLE_ARG(...) __VA_ARGS__
+
 #define RESULT_ERROR(...) conet::impl::Result<void>(ResultFailureType{}, ##__VA_ARGS__)
 #define RESULT_SUCCESS conet::impl::Result<void>()
 
@@ -45,7 +47,7 @@ if ( !RESULT_VARIABLE_TMP ) \
 } \
 v = std::forward<decltype(RESULT_VARIABLE_TMP)>(RESULT_VARIABLE_TMP).value();
 
-#define RESULT_AUTO(r, e) RESULT_TRY(auto &&r, e)
+#define RESULT_AUTO(r, e) RESULT_TRY(SINGLE_ARG(auto &&r), e)
 
 #define RESULT_CO_CHECK(e) \
 { \
