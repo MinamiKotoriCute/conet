@@ -7,7 +7,10 @@
 namespace conet {
 
 MysqlClientPool::MysqlClientPool(boost::asio::io_context &io_context) :
-    strand_(boost::asio::make_strand(io_context))
+    strand_(boost::asio::make_strand(io_context)),
+    current_number_(0),
+    limit_max_number_(0),
+    port_(0)
 {
 
 }
@@ -70,7 +73,14 @@ boost::asio::awaitable<result<std::shared_ptr<MysqlClient>>> MysqlClientPool::ge
     boost::system::error_code error_code;
     static constexpr boost::source_location loc = BOOST_CURRENT_LOCATION;
     error_code.assign(error::internal_error, error::conet_category(), &loc);
-    co_return error_code;
+
+    conet::ErrorInfo error_info(error_code);
+    error_info.set_error_message("mysql client limit");
+    error_info.add_pair("database", database_);
+    error_info.add_pair("current_number", current_number_);
+    error_info.add_pair("limit_max_number", limit_max_number_);
+
+    co_return error_info;
 }
 
 boost::asio::awaitable<result<MysqlClient>> MysqlClientPool::create()
