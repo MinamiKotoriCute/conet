@@ -88,13 +88,9 @@ public:
     template<typename T = MysqlQueryResultImpl>
     boost::asio::awaitable<result<std::vector<T>>> query(const std::string& sql)
     {
-        auto&& r = co_await query_real(sql);
-        if (!r)
-        {
-            r.error_info().add_pair("sql", sql);
-        }
+        RESULT_CO_AUTO(results, co_await query_real(sql), r.error_info().add_pair("sql", sql));
 
-        co_return r;
+        co_return std::move(results);
     }
 
     std::string encode_string(const std::string &raw);

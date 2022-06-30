@@ -28,47 +28,63 @@
     result.error_info().add_pair("callstack", __FILE__ + std::string(":") + std::to_string(__LINE__));
 
 
-#define RESULT_CHECK(e) \
+#define RESULT_CHECK(e, ...) \
 { \
     auto &&r = e; \
     if (r.has_error()) \
     { \
         RESULT_LOG_WITH_ERROR(INFO, r); \
-        return r; \
+        { \
+            __VA_ARGS__; \
+        } \
+        return std::forward<decltype(r)>(r); \
     } \
 }
 
-#define RESULT_TRY(v, e) \
+#define RESULT_TRY(v, e, ...) \
 auto && RESULT_VARIABLE_TMP = e; \
 if ( !RESULT_VARIABLE_TMP ) \
 { \
     RESULT_LOG_WITH_ERROR(INFO, RESULT_VARIABLE_TMP); \
-    return RESULT_VARIABLE_TMP; \
+    { \
+        auto && r = RESULT_VARIABLE_TMP; \
+        (void)r; \
+        __VA_ARGS__; \
+    } \
+    return std::forward<decltype(RESULT_VARIABLE_TMP)>(RESULT_VARIABLE_TMP); \
 } \
 v = std::forward<decltype(RESULT_VARIABLE_TMP)>(RESULT_VARIABLE_TMP).value();
 
-#define RESULT_AUTO(r, e) RESULT_TRY(SINGLE_ARG(auto &&r), e)
+#define RESULT_AUTO(r, e, ...) RESULT_TRY(SINGLE_ARG(auto &&r), e, ## __VA_ARGS__)
 
-#define RESULT_CO_CHECK(e) \
+#define RESULT_CO_CHECK(e, ...) \
 { \
     auto &&r = e; \
     if ( !r ) \
     { \
         RESULT_LOG_WITH_ERROR(INFO, r); \
-        co_return r; \
+        { \
+            __VA_ARGS__; \
+        } \
+        co_return std::forward<decltype(r)>(r); \
     } \
 }
 
-#define RESULT_CO_TRY(v, e) \
+#define RESULT_CO_TRY(v, e, ...) \
 auto && RESULT_VARIABLE_TMP = e; \
 if ( !RESULT_VARIABLE_TMP ) \
 { \
     RESULT_LOG_WITH_ERROR(INFO, RESULT_VARIABLE_TMP); \
-    co_return RESULT_VARIABLE_TMP; \
+    { \
+        auto && r = RESULT_VARIABLE_TMP; \
+        (void)r; \
+        __VA_ARGS__; \
+    } \
+    co_return std::forward<decltype(RESULT_VARIABLE_TMP)>(RESULT_VARIABLE_TMP); \
 } \
 v = std::forward<decltype(RESULT_VARIABLE_TMP)>(RESULT_VARIABLE_TMP).value();
 
-#define RESULT_CO_AUTO(r, e) RESULT_CO_TRY(auto &&r, e)
+#define RESULT_CO_AUTO(r, e, ...) RESULT_CO_TRY(SINGLE_ARG(auto &&r), e, ## __VA_ARGS__)
 
 
 

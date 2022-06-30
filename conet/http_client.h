@@ -30,7 +30,7 @@ public:
     boost::asio::awaitable<result<std::string>> co_get(const std::string &url)
     {
         UrlParser parser;
-        RESULT_CO_CHECK(parser.parse(url));
+        RESULT_CO_CHECK(parser.parse(url), r.error_info().add_pair("url", url));
 
         boost::asio::ip::tcp::resolver resolver(stream_.get_executor());
         auto results = co_await resolver.async_resolve(parser.host(), parser.service(), boost::asio::use_awaitable);
